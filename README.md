@@ -16,7 +16,7 @@ single source across your portfolio.
 ```bash
 git clone https://github.com/marwansaab/obsidian-vault-bootstrap.git
 cd obsidian-vault-bootstrap
-nvm use 22                  # or fnm / volta — Node >= 22.11.0 is required
+nvm use 22                  # or fnm / volta — Node >= 22.13.0 is required
 npm ci                      # honours the lockfile and .npmrc engine-strict
 npm run build
 npx . --help

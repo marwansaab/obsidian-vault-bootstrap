@@ -32,7 +32,10 @@ first consuming spec:
 - Six quality gates wired identically locally and in CI: format-check, lint,
   typecheck, build, test, coverage (statements ≥ 80%).
 - Hard runtime-floor enforcement via committed `.npmrc engine-strict=true`
-  paired with `engines.node: ">=22.11.0"`.
+  paired with `engines.node: ">=22.13.0"` (transitive dep
+  `eslint-visitor-keys@5` requires `^20.19.0 || ^22.13.0 || >=24`, which
+  pushes our effective floor above the constitution's 22.11 minimum;
+  constitution-compliant since the constitution sets a floor not a ceiling).
 - LF line-ending discipline via committed `.gitattributes`.
 - Constitution v1.0.0 at `.specify/memory/constitution.md` (Principles I–VII,
   non-negotiable) — ratified 2026-05-18.
