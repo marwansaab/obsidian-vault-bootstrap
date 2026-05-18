@@ -233,9 +233,11 @@ Built `dist/cli.js` is the compiled `src/cli.ts` with a shebang preserved (`#!/u
 
 ## R11 — Constitution-mandated dependencies not added in v1
 
-**Decision**: `zod`, `handlebars`, `js-yaml`, `glob` / `fast-glob`, `@inquirer/prompts` are **not** added to `package.json` in v1.
+**Decision**: `zod`, `js-yaml`, `glob` / `fast-glob`, `@inquirer/prompts` are **not** added to `package.json` in v1.
 
-**Rationale**: The constitution requires "new runtime dependencies MUST be justified in the PR description against the alternative of a small in-tree implementation". v1 has no profile parsing (zod), no rendering (handlebars), no YAML reads (js-yaml), no glob walks (glob), no interactive Q&A (@inquirer/prompts). Adding any of them as an unused dep would fail their own justification gate. Each lands with the first spec that actually consumes it.
+**Rationale**: The constitution requires "new runtime dependencies MUST be justified in the PR description against the alternative of a small in-tree implementation". v1 has no profile parsing (zod), no YAML reads (js-yaml), no glob walks (glob), no interactive Q&A (@inquirer/prompts). Adding any of them as an unused dep would fail their own justification gate. Each lands with the first spec that actually consumes it.
+
+**Post-v1.1.0 amendment (2026-05-18)**: this decision was originally written against constitution v1.0.0, which pinned Handlebars as the templating engine. `handlebars` was the fifth entry on the deferred-deps list. Constitution v1.1.0 replaced the Handlebars pin with a project-local `interpolate()` function per ADR-020 (Template Substitution Engine Choice). `handlebars` was therefore removed from this list — the renderer is now in-tree, not a deferred external dependency.
 
 **Alternatives**:
 - Add all five as `dependencies` for "future use" — rejected by the constitution's dependency-justification rule.
