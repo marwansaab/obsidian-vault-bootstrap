@@ -1,74 +1,48 @@
 # @marwansaab/obsidian-vault-bootstrap
 
+[![npm version](https://img.shields.io/npm/v/@marwansaab/obsidian-vault-bootstrap.svg)](https://www.npmjs.com/package/@marwansaab/obsidian-vault-bootstrap)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Initialise a complete Obsidian vault — folder structure, templates, MOCs,
 frontmatter conventions — and generate matching agent-instruction files for
 Claude, Cursor, Cline, or any AI coding assistant. Q&A-driven, npm-versioned,
 single source across your portfolio.
 
-> **Governance.** Every change in this repository is measured against the
-> project constitution:
-> [`.specify/memory/constitution.md`](.specify/memory/constitution.md) (v1.0.0,
-> ratified 2026-05-18). Principles I–VII are non-negotiable; reviewers cite
-> them by Roman numeral when accepting or rejecting changes.
+> [!NOTE]
+> **Status — actively work in progress.** The tool surface, error contracts, and module layout still evolve from release to release. Pin a version if stability matters; expect breaking changes before `v1.0`.
 
-## Quickstart
+> [!IMPORTANT]
+> **Personal project.** Built and maintained for my own use. External support is not guaranteed — use at your own discretion. Issues and pull requests are welcome but may sit unattended.
 
-```bash
-git clone https://github.com/marwansaab/obsidian-vault-bootstrap.git
-cd obsidian-vault-bootstrap
-nvm use 22                  # or fnm / volta — Node >= 22.13.0 is required
-npm ci                      # honours the lockfile and .npmrc engine-strict
-npm run build
-npx . --help
-```
+## Purpose
 
-v0.1 ships a placeholder CLI only — `npx . --help` and `npx . --version` are
-the entire end-user surface. See **Limitations (v0.1)** below for what does
-not work yet.
+Bootstrap an Obsidian vault and its companion agent-instruction files from a single source of truth, via Q&A.
 
-## Quality gates
+Replaces hand-maintained runbooks with a renderer that produces:
 
-The same six gates run locally and in CI (single source of truth per FR-014).
-Each gate exits non-zero on any failure and names the offending file in its
-output (FR-006).
+- The standard vault folder structure — 3-digit-prefix convention; Meta / Process / Solution / Artifacts / External Knowledge categories.
+- Templates, MOCs, sentinel files, and frontmatter conventions.
+- Matching agent-instruction files for whichever AI coding assistant the project uses — Claude Code, Cursor, Cline, Windsurf, Continue, or any combination — via per-assistant template families.
 
-| Gate         | Command                 | Strictness bar                                 |
-| ------------ | ----------------------- | ---------------------------------------------- |
-| format-check | `npm run format:check`  | `prettier --check .` — zero divergence         |
-| lint         | `npm run lint`          | `eslint . --max-warnings 0`                    |
-| typecheck    | `npm run typecheck`     | `tsc --noEmit` — zero diagnostics, strict mode |
-| build        | `npm run build`         | `tsc` — zero warning-severity emit             |
-| test         | `npm test`              | `vitest run` — non-zero on any failure         |
-| coverage     | `npm run test:coverage` | statements ≥ 80% (vitest threshold)            |
+Each consumer project commits the rendered output to its own Git repo. A small `claude.profile.yaml` per project pins the desired source-repo version. Rule clarifications at the source propagate via opt-in version-bump — no submodule, no plugin install, no machine-local state.
 
-`npm run format` is the local fix-it command (writes prettier-formatted files
-back); it is **not** a CI gate.
+## Vision
 
-## Limitations (v0.1)
+Make starting a new Obsidian-vault-backed project — for use with any AI coding assistant — as simple as `npx @marwansaab/obsidian-vault-bootstrap init`.
 
-v0.1 is a scaffold. The following are deliberately deferred — each will land
-with the spec that first consumes it. The full version history is in
-[`CHANGELOG.md`](CHANGELOG.md).
+The package treats vault content and agent instructions as a single shipped artefact, versioned and distributed via npm. A change at the source repo reaches every consumer via opt-in version-bump; a new project starts with the latest content at zero copy-paste cost. LLM-agnostic by design — support for a new assistant arrives as a new template family, not a code branch.
 
-- No content-rendering pipeline yet — `core/`, `families/`, `templates/`, and
-  `projects/` ship empty (with `.gitkeep` placeholders) and will be populated
-  by subsequent specs.
-- No end-user subcommands beyond `--help` / `--version` — no `init`, no
-  `bootstrap`, no profile-driven render.
-- No interactive Q&A flow.
-- No content-bearing fixtures (instruction-content files, template files,
-  project-profile files arrive in later specs).
-- No Obsidian vault-folder initialisation pipeline.
-- **Single supported OS in CI: `ubuntu-latest`.** The package itself is Node
-  and runs anywhere Node does; the gate-verified OS in CI is Linux only.
-  Windows and macOS contributors can use the package, but their environment
-  is not covered by the CI matrix.
-- No code-graph integration.
 
-## Attributions
+## Install
 
-v0.1 ships no upstream-derived code; every source file in this commit carries
-an `// Original — no upstream. <intent>.` header per constitution Principle
-VII. This section exists as a stable insertion point — future modules
-adapted from external projects will be listed here with their SPDX
-identifier and pinned commit hash.
+Not ready yet!
+
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Acknowledgements
+
+- [juliusbrussee/caveman](https://github.com/juliusbrussee/caveman) — the caveman compression skill. Agent-facing files in this package use the discipline it codifies.
+- [github/spec-kit](https://github.com/github/spec-kit) — governance framework. This project uses `/speckit-constitution`, `/speckit-specify`, `/speckit-plan`, `/speckit-tasks`, and `/speckit-implement` for spec-driven development.
