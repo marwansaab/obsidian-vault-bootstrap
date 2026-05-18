@@ -1,46 +1,50 @@
 <!--
 Sync Impact Report
 ==================
-Version change: TEMPLATE (unratified) → 1.0.0
-Bump rationale: Initial ratification. Prior file was the unfilled template
-                shipped by the Specify scaffold; no semantic predecessor exists.
-                MAJOR=1 marks the first stable governance document.
+Version change: 1.0.0 → 1.1.0
+
+Bump rationale: MINOR — substantive change to the Templating clause in
+                Technical Standards & Stack Constraints. The Handlebars
+                pin is dropped in favour of a project-local substitution-
+                only interpolator per ADR-020 (Template Substitution
+                Engine Choice, Decided 2026-05-18). No new principles
+                added; no principles removed; no governance rules
+                reversed. Existing guidance is materially contracted in
+                scope (one full template engine removed from the mandated
+                stack; one in-tree function named in its place).
+
+Resolved a constitution-internal contradiction: v1.0.0 Technical
+Standards pinned Handlebars while v1.0.0 Dependencies rule biased hard
+toward in-tree implementations under ~150 LOC. The two clauses
+contradicted each other for the specific case of a ~30-LOC substitution
+interpolator. v1.1.0 resolves the contradiction in favour of the
+Dependencies-rule bias.
 
 Modified principles:
-  - (none — initial ratification)
+  - (none modified at the principle level)
 
 Added sections:
-  - Core Principles (I–VII): Deterministic & Reproducible Rendering;
-    Single Source of Truth; LLM-Agnostic Agent-Instruction Generation;
-    Boundary Input Validation with Zod; Explicit Failure Propagation;
-    Caveman Compression for Agent-Facing Templates; Attribution & Layered
-    Composition Transparency.
-  - Technical Standards & Stack Constraints
-  - Development Workflow & Quality Gates
-  - Governance (amendment procedure, versioning policy, runtime guidance)
+  - (none)
+
+Modified sections:
+  - Technical Standards & Stack Constraints, "Templating" bullet —
+    replaces the Handlebars pin with the substitution-only
+    interpolate() rule per ADR-020.
 
 Removed sections:
   - (none)
 
 Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — Constitution Check slot is
-       generic ("Gates determined based on constitution file"); resolves
-       against this document at plan time. No edit required.
-  - ✅ .specify/templates/spec-template.md — principle-agnostic; no edit
+  - ✅ .specify/templates/* — principle-agnostic; no edit required.
+  - ✅ README.md — does not reference the Templating clause; no edit
        required.
-  - ✅ .specify/templates/tasks-template.md — principle-agnostic; no edit
+  - ✅ CLAUDE.md — does not reference the Templating clause; no edit
        required.
-  - ✅ .specify/templates/checklist-template.md — principle-agnostic; no
-       edit required.
-  - ⚠ CLAUDE.md — currently a SPECKIT placeholder pointing readers at the
-       active plan. Defers to this constitution by design; update when a
-       first plan exists, not now.
-  - ⚠ README.md — does not yet carry the `## Attributions` section
-       Principle VII requires. Add when the first attributable upstream
-       lands (the package is presently pre-code).
 
 Follow-up TODOs:
-  - (none — all placeholders resolved)
+  - First renderer-bearing spec implements src/render/interpolate.ts
+    per ADR-020's Decision section + co-located unit tests covering the
+    eight cases enumerated there.
 -->
 
 # obsidian-vault-bootstrap Constitution
@@ -94,7 +98,7 @@ Any module whose algorithm, structure, or non-trivial code derives from another 
 - **Language**: TypeScript, strict mode, `tsc --noEmit` clean. No `any` in public signatures; `unknown` only when immediately narrowed via zod.
 - **TypeScript config**: `tsconfig.json` MUST set `"module": "NodeNext"`, `"moduleResolution": "NodeNext"`, `"target": "ES2024"` (or higher matching the `engines.node` floor), `"strict": true`.
 - **Runtime**: Node.js >= 22.11 (latest 22.x LTS at ratification). Set `engines.node` in `package.json` accordingly.
-- **Templating**: Handlebars is the templating engine. Other engines (Nunjucks, EJS, etc.) require a dependency-justification entry per the Dependencies rule and a constitution amendment.
+- **Templating**: Substitution-only interpolation of `{{name}}`-style tokens via the project-local `interpolate()` function in `src/render/interpolate.ts`. Full template engines (Handlebars, Nunjucks, Liquid, etc.) are forbidden without a future amendment per ADR-020 (Template Substitution Engine Choice, Decided 2026-05-18).
 - **Validation**: `zod` is the only permitted runtime input-validation library at any boundary surface. Hand-rolled `typeof` / `instanceof` chains at boundaries are a violation.
 - **YAML parsing**: `js-yaml`. Other parsers require justification.
 - **Glob matching**: `glob` or `fast-glob`.
@@ -142,4 +146,4 @@ This constitution supersedes all other contributor guidance, including `README.m
 
 **Runtime guidance**: Day-to-day development guidance lives in `CLAUDE.md` and in feature-specific plans under `specs/`. Those documents MUST defer to this constitution; if they imply a contradiction, treat it as a bug in the guidance document and fix it.
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-18 | **Last Amended**: 2026-05-18
+**Version**: 1.1.0 | **Ratified**: 2026-05-18 | **Last Amended**: 2026-05-18
