@@ -32,11 +32,9 @@ Make starting a new Obsidian-vault-backed project — for use with any AI coding
 
 The package treats vault content and agent instructions as a single shipped artefact, versioned and distributed via npm. A change at the source repo reaches every consumer via opt-in version-bump; a new project starts with the latest content at zero copy-paste cost. LLM-agnostic by design — support for a new assistant arrives as a new template family, not a code branch.
 
-
 ## Install
 
 Not ready yet!
-
 
 ## License
 
