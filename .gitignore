@@ -7,3 +7,12 @@ coverage/
 Thumbs.db
 *.swp
 .vscode/settings.json
+
+# Architecture local reference
+.architecture/
+
+# Decisions local reference
+.decisions/
+
+# Memory local reference
+.memory/
