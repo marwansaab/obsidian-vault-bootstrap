@@ -36,10 +36,12 @@ nvm use 22  # or fnm use 22, or volta pin node@22
 npm ci
 
 # 4. Run each quality gate. Should be all green on a clean checkout.
+#    (six gates per analyzer remediation I1; format-check is the new sixth.)
+npm run format:check
 npm run lint
 npm run typecheck
 npm run build
-npm test -- --coverage
+npm run test:coverage
 
 # 5. Try the placeholder entry-point.
 npx . --help
@@ -55,15 +57,17 @@ Expected wall-clock on a warm `~/.npm` cache and a modern laptop: ~2–3 minutes
 - Exit code: `0`
 - Stderr noise tolerated: package-manager version banner, transitive-dep deprecation notices.
 - Stderr noise that fails the install gate (per [spec Q2 / BI-0092 step 15](spec.md#clarifications)): peer-dependency warnings (unless documented in the change description that introduced the dep).
+- **Engine-version mismatch is a hard error** (not a warning) per analyzer remediation **F1**: a contributor on Node `< 22.11.0` sees `npm ci` exit non-zero with a message naming the `engines.node` requirement. Driven by the committed `.npmrc` `engine-strict=true`.
 
 ### Step 4 — quality gates
 
 | Command | Expected exit | Expected output shape |
 |---------|---------------|----------------------|
+| `npm run format:check` | `0` | No "Code style issues found" output from prettier; equivalent to `prettier --check .` finding nothing to fix. |
 | `npm run lint` | `0` | No `warning` or `error` lines from `eslint`. Equivalent to `eslint . --max-warnings 0` exiting 0. |
 | `npm run typecheck` | `0` | Zero output, or a "No errors found" line from `tsc --noEmit`. |
 | `npm run build` | `0` | `dist/` produced (cli.js, cli.d.ts, source maps). No warning-severity emit from `tsc`. |
-| `npm test -- --coverage` | `0` | vitest summary shows N tests passing, coverage summary shows `Statements ≥ 80%`. |
+| `npm run test:coverage` | `0` | vitest summary shows N tests passing, coverage summary shows `Statements ≥ 80%`. |
 
 ### Step 5 — placeholder CLI
 
@@ -78,11 +82,13 @@ Useful to validate Story 1 acceptance scenario 3 ("affected gate exits non-zero 
 
 | Deliberate breakage | Gate that catches it | Failure message names |
 |--------------------|---------------------|----------------------|
+| Reformat `src/cli.ts` with a non-prettier style (e.g. `let x  =  1;` with double spaces) | `npm run format:check` | `src/cli.ts` |
 | Add `let x: number = "string"` to `src/cli.ts` | `npm run typecheck` | `src/cli.ts` |
 | Add `let unused = 1;` to `src/cli.ts` | `npm run lint` (rule `@typescript-eslint/no-unused-vars`) | `src/cli.ts` |
 | Delete an assertion in `src/cli.test.ts` so a test fails | `npm test` | the test name and source file |
-| Add `if (a) { throw "x" }` with `a` never true, dropping statement coverage below 80% | `npm test -- --coverage` | the file + the uncovered statements |
-| Run with Node `< 22.11` | `npm ci` install gate | the required Node version |
+| Add `if (a) { throw "x" }` with `a` never true, dropping statement coverage below 80% | `npm run test:coverage` | the file + the uncovered statements |
+| Run with Node `< 22.11` | `npm ci` install gate | the required Node version (hard error, not warning — driven by `.npmrc engine-strict=true`) |
+| Corrupt `eslint.config.mjs` syntax | `npm run lint` | `eslint.config.mjs` (gate-self-failure per Edge Case + analyzer **U1**) |
 
 If a gate fails with a message that does **not** name the file / flag / test, that is a violation of [FR-006](spec.md#functional-requirements) and a bug.
 
@@ -113,4 +119,4 @@ After pushing the scaffold to a branch:
 - All five gate steps (`npm run lint`, `npm run typecheck`, `npm run build`, `npm test -- --coverage`, preceded by `npm ci`) report green.
 - On a hypothetical broken-on-purpose PR, the failing gate is named in the GitHub Actions summary (the job name + step name make this automatic).
 
-If the local sequence (`npm run lint && npm run typecheck && npm run build && npm test -- --coverage`) and the CI sequence diverge for any reason other than an explicit, justified amendment, that is a violation of [FR-014](spec.md#functional-requirements).
+If the local sequence (`npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test:coverage`) and the CI sequence diverge for any reason other than an explicit, justified amendment, that is a violation of [FR-014](spec.md#functional-requirements).

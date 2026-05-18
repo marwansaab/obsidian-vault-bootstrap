@@ -33,16 +33,17 @@ Represents a named, individually-invokable verification step that the scaffold s
 - **I-QG-2**: `qg.strictnessBar` MUST be cited verbatim in the README or in `package.json` scripts so a contributor can see it without reading CI YAML. (e.g. `"lint": "eslint . --max-warnings 0"` in `package.json` is self-documenting.)
 - **I-QG-3**: The coverage gate's threshold (currently `statements: 80`) lives in **one** file (`vitest.config.ts`) per constitution §Development Workflow item 5.
 
-**v1 instances** (one row per Quality Gate):
+**v1 instances** (one row per Quality Gate; updated post-analyzer-remediation per **I1** and **I2**):
 
 | `id` | `localCommand` | `ciStep` | `strictnessBar` |
 |------|---------------|----------|----------------|
+| `format-check` | `npm run format:check` | `- run: npm run format:check` | `prettier --check .` (non-zero exit if any file diverges from prettier formatting) |
 | `lint` | `npm run lint` | `- run: npm run lint` | `eslint . --max-warnings 0` |
 | `typecheck` | `npm run typecheck` | `- run: npm run typecheck` | `tsc --noEmit` (strict, zero diagnostics) |
 | `build` | `npm run build` | `- run: npm run build` | `tsc` (zero warning-severity emit) |
-| `test` | `npm test` | `- run: npm test -- --coverage` | `vitest run` (non-zero on any failure or runner warning) |
-| `coverage` | `npm test -- --coverage` | (same line as `test`) | `statements >= 80` (vitest threshold) |
-| `install` | `npm ci` | `- run: npm ci` | peer-dep warnings fail unless documented in change description |
+| `test` | `npm test` | (covered by `test:coverage` in CI) | `vitest run` (non-zero on any failure or runner warning) |
+| `coverage` | `npm run test:coverage` | `- run: npm run test:coverage` | `statements >= 80` (vitest threshold) |
+| `install` | `npm ci` | `- run: npm ci` | peer-dep warnings fail unless documented in change description; engine-version violations are hard errors via `.npmrc engine-strict=true` (analyzer **F1**) |
 
 ## Entity 2 — Governance Constitution
 
@@ -102,7 +103,7 @@ Represents the concrete set of directories the repository ships on first commit,
 - **I-SDM-3**: `gitignored` directories MUST appear in `.gitignore` AND MUST NOT have a `.gitkeep`.
 - **I-SDM-4**: Adding a new directory in a subsequent spec requires updating this entity's instance table below in the same change.
 
-**v1 instances** (one row per directory):
+**v1 instances** (one row per directory). Per analyzer finding **D1**, the canonical enumeration with source citations lives at [spec.md FR-007](spec.md#functional-requirements); the table below mirrors it for entity-attribute mapping and MUST be kept in sync via a co-edit when FR-007 changes.
 
 | `path` | `kind` | `source` | `firstConsumingSpec` |
 |--------|--------|----------|---------------------|

@@ -136,7 +136,7 @@ export default defineConfig({
 
 ## R7 — GitHub Actions workflow shape
 
-**Decision**: Single workflow `.github/workflows/ci.yml`, triggered on `push` (all branches) and `pull_request`, single `ubuntu-latest` job running the same `npm run` scripts as the local sequence.
+**Decision**: Single workflow `.github/workflows/ci.yml`, triggered on `push` (all branches) and `pull_request`, single `ubuntu-latest` job running the same `npm run` scripts as the local sequence. **Updated** per analyzer findings **I1** (added `format:check` gate) and **I2** (standardised on `npm run test:coverage`, not `npm test -- --coverage`).
 
 ```yaml
 # .github/workflows/ci.yml (shape)
@@ -153,11 +153,12 @@ jobs:
         with:
           node-version: "22.11"
           cache: npm
-      - run: npm ci
+      - run: npm ci          # honours .npmrc engine-strict=true (analyzer F1)
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
-      - run: npm test -- --coverage
+      - run: npm run test:coverage
 ```
 
 **Rationale**: Satisfies FR-013 (CI runs same gates as local) + FR-014 (single source of truth — both CI and a contributor invoke the same `npm run` names). `npm ci` instead of `npm install` enforces lockfile fidelity and surfaces peer-dep warnings as exit-non-zero in the install gate per Q2 / BI-0092 step 15. Per Q5, `ubuntu-latest` only — no matrix.
@@ -213,14 +214,14 @@ Built `dist/cli.js` is the compiled `src/cli.ts` with a shebang preserved (`#!/u
 
 ## R10 — README structure
 
-**Decision**: Single `README.md` at repo root with the following sections in order:
+**Decision**: Single `README.md` at repo root with the following sections in order. **Updated** per analyzer findings **I1** (six gates not five), **I2** (canonical command set `npm ci` + `npm run test:coverage`), **A1** (governance link "visible without scrolling on a standard 1080p viewport").
 
 1. `# @marwansaab/obsidian-vault-bootstrap` (title)
 2. One-paragraph description (FR-009 + SC-004 "answer 'what does this package do?' in 60 s").
-3. **Governance** callout near the top with a prominent link to [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) (per FR-008, FR-009, SC-007).
-4. `## Quickstart` — `git clone ...`, `nvm use 22`, `npm install`, `npm run build`, `npx . --help`.
-5. `## Quality gates` — names each gate (lint / typecheck / build / test / coverage) and its `npm run` command (FR-002).
-6. `## Limitations (v0.1)` — bullets matching the spec's Out-of-Scope items (FR-009 last bullet).
+3. **Governance** callout near the top — visible without scrolling on a standard 1080p viewport — with a prominent link to [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) (per FR-008, FR-009, SC-007).
+4. `## Quickstart` — `git clone ...`, `nvm use 22`, **`npm ci`** (not `npm install`; respects lockfile + `engine-strict`), `npm run build`, `npx . --help`.
+5. `## Quality gates` — names each of the **six gates** (`format:check` / `lint` / `typecheck` / `build` / `test` / `coverage`) with their canonical `npm run` commands (FR-002).
+6. `## Limitations (v0.1)` — bullets matching the spec's Out-of-Scope items (FR-009 last bullet). Cross-references `CHANGELOG.md` for the version-history view.
 7. `## Attributions` — empty in v1 by design; section exists so future attributions are an append (Principle VII).
 
 **Rationale**: Order matches the visitor's likely scan path (what is it → how to verify → what doesn't work yet → credits). Governance link near the top, not in a "Project meta" footer, directly satisfies SC-007's "located within 30 seconds, version stamp visible without scrolling once open".
@@ -252,6 +253,18 @@ Built `dist/cli.js` is the compiled `src/cli.ts` with a shebang preserved (`#!/u
 - Catching `parseArgs` errors silently and printing only `--help` — rejected: violates FR-006 + Principle V (silent failure masks the problem).
 - Adding subcommands now — rejected by Out-of-Scope ("no end-user-facing subcommands beyond a help / placeholder entry-point").
 
+## R13 — Engine-version enforcement (analyzer remediation **F1**)
+
+**Decision**: Ship `.npmrc` at repo root containing `engine-strict=true` (single line).
+
+**Rationale**: `engines.node` in `package.json` produces a **warning** by default in npm 10+; the install proceeds even on a Node line below the declared floor. Without `engine-strict`, FR-005's "fail with an error message that explicitly names the runtime-floor requirement" and SC-006's "error message ... not a downstream stack trace" silently pass on a contributor running Node < 22.11. Setting `engine-strict=true` at the project level (NOT user-level) converts the warning into a hard error for both local `npm ci`/`npm install` and CI `npm ci` invocations — a single source of truth covering both surfaces. Surfaced as `/speckit-analyze` round-1 finding **F1 (HIGH)**.
+
+**Alternatives**:
+
+- `--engine-strict` flag on every CI `npm ci` invocation — rejected: doesn't cover the local install path; a contributor doing `npm install` locally would still see only a warning.
+- Documenting the requirement in the README only — rejected: documentation isn't enforcement, contradicts FR-005's "MUST fail".
+- Setting `engine-strict=true` in `~/.npmrc` (user-level) — rejected: per-contributor configuration, not part of the repo; defeats reproducibility.
+
 ## Open items
 
-None. All Phase 0 unknowns are resolved.
+None. All Phase 0 unknowns are resolved; one Phase-2 analyzer-remediation decision (R13) added during `/speckit-analyze` round 1 (2026-05-18).

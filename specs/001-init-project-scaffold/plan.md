@@ -16,7 +16,7 @@ Land the v1 substrate for `@marwansaab/obsidian-vault-bootstrap`: a TypeScript-o
 
 **Primary Dependencies (v1, runtime)**: none. The placeholder CLI uses only `node:util` `parseArgs` (per constitution) and the Node standard library.
 
-**Primary Dependencies (v1, dev)**: `typescript`, `eslint`, `@eslint/js`, `typescript-eslint`, `prettier`, `eslint-config-prettier`, `vitest`, `@vitest/coverage-v8`, `@types/node`.
+**Primary Dependencies (v1, dev)**: `typescript`, `eslint`, `@eslint/js`, `typescript-eslint`, `prettier`, `eslint-config-prettier`, `vitest`, `@vitest/coverage-v8`, `@types/node`. Per analyzer finding **I1**, `prettier` is invoked as a sixth gate via `npm run format:check` (was previously declared "formatter of record" but never gated).
 
 **Constitution-mandated dependencies deferred to subsequent specs** (each will land with the spec that first uses it): `zod`, `handlebars`, `js-yaml`, `glob` or `fast-glob`, `@inquirer/prompts`. Declaring them as unused dependencies in v1 would violate the constitution's dependency-justification rule.
 
@@ -77,8 +77,10 @@ specs/001-init-project-scaffold/
 
 ### Source Code (repository root)
 
+> **Canonical directory enumeration**: [spec.md FR-007](spec.md#functional-requirements). The tree below adds v1 file-level detail (which `src/` files ship, which workflow goes in `.github/workflows/`, etc.) and does not duplicate the source-attribution column — those live in FR-007 (per analyzer finding **D1**).
+
 ```text
-core/                    # Empty + .gitkeep. Source: ADR-019 + [[Instruction Categories]].
+core/                    # Empty + .gitkeep. Canonical entry: spec.md FR-007.
 ├── upfront/.gitkeep
 └── on-demand/.gitkeep
 
@@ -110,9 +112,12 @@ package.json             # Declares engines.node, bin, scripts, devDependencies.
 tsconfig.json            # NodeNext, ES2024, strict, noEmit.
 eslint.config.mjs        # Flat config, typescript-eslint, prettier-disable.
 vitest.config.ts         # Test + coverage config; statements floor 80%.
+.npmrc                   # engine-strict=true — makes engines.node a hard error
+                         #   (analyzer finding F1; FR-005 / SC-006 enforcement).
 .gitattributes           # LF enforcement (per spec Q5 LF/CRLF drift assumption).
 .gitignore               # Includes .specify/working/, node_modules/, dist/, coverage/.
 README.md                # FR-009 minimum content + governance link (FR-008).
+CHANGELOG.md             # v0.1.0 baseline (FR-012; analyzer finding U2).
 CONTRIBUTING.md          # Already present (commit 93412b1).
 LICENSE                  # Already present (commit 9818f38).
 CLAUDE.md                # SPECKIT marker; points to active plan.
