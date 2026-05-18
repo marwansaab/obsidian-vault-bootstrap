@@ -8,6 +8,16 @@
 
 **Input**: User description: "The empty project repository becomes a working, governed code package that a contributor can clone, install dependencies into, and immediately run the package's quality gates against — with a governance document codifying how subsequent work must be done."
 
+## Clarifications
+
+### Session 2026-05-18
+
+- Q: FR-007 directory tree scope — which directories MUST the v1 scaffold ship? → A: Top-level dir set per AI Instructions Distribution Channel §Source Repo Shape + BI-0092 coverage-matrix files. Empty-with-`.gitkeep`: `core/upfront/`, `core/on-demand/`, `families/default/`, `templates/`, `projects/`. Non-empty at scaffold: `src/`, `.github/workflows/`, `.specify/templates/`, `.specify/memory/`. `.specify/working/` gitignored (BI-0092 step 7) and not committed. Each dir traced to a named source: ADR-019, [[Instruction Categories]], AI Instructions Distribution Channel doc, BI-0092 task list. Top-level placement explicitly rejects `src/<pkg>/`-nested alternatives.
+- Q: FR-003 "no warnings" — what is the per-gate enforcement bar? → A: Option B (warning-severity output from gate tools fails their gate) as base rule, with BI-0092 step-15 peer-dependency carve-out: undocumented peer-dep warnings fail; documented ones tolerated. Per-gate bars per BI-0092: lint = `eslint . --max-warnings 0` (step 4); type-check = `tsc --noEmit` zero-diagnostics at configured strict level; build = `tsc` zero-warning emit at strict level; test = `vitest` non-zero on test failure or runner-warning (unhandled-promise, deprecated-API); coverage = `vitest` fails when statement coverage drops below 80% (step 6); install = peer-dep warnings fail unless documented (step 15), transitive-dep deprecation noise + package-manager version banners tolerated. Rejects A (stderr-as-warning over-brittle), C (tracked-allowlist file heavier than BI requires), D (strips FR-003 teeth, contradicts BI-0092 step-15 literal "zero warnings").
+- Q: FR-008 / SC-007 — what is the governance constitution's canonical location? → A: Option A — `.specify/memory/constitution.md` is canonical (reuses the Spec Kit convention and the existing file from commit `653b364`); the README adds a prominent governance link near the top to satisfy SC-007's 30-second discoverability. Single source of truth, no symlink portability risk. (Q3 on coverage-gate enforcement resolved early by Q2's answer — 80% statement floor per BI-0092 step 6.)
+- Q: FR-011 — what is the placeholder entry-point invocation surface? → A: Option A — declare a Node `bin` in `package.json`, README quick-start command is `npx . --help` (idiomatic, single-token, no `dist/` path leak, works from a fresh clone pre-publish AND from `npx <package>` post-publish without README changes). Rejects B (script-name leaks into docs), C (duplicated invocation surface for no v1 benefit), D (leaks build-output path, requires build-first).
+- Q: FR-013 / `.github/workflows/` — which OS does the v1 CI matrix target? → A: Option A — `ubuntu-latest` only. Honours the "single supported OS" assumption + the "cross-platform CI matrix out-of-scope" Out-of-Scope item verbatim; matches the standard Node CI default. LF/CRLF drift between the Windows dev environment and Linux CI is handled by a committed `.gitattributes` (declarative, runs at git-level on every platform) rather than by adding a windows-latest CI job. Rejects B (mild "single OS" violation for marginal extra coverage), C (atypical for Node, slower runners, Windows-specific lock-in), D (spec ships `.github/workflows/` already, needs an OS contract now).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Maintainer starts feature work on a working substrate (Priority: P1)
@@ -102,27 +112,52 @@ An automated continuous-integration run on the first push to the default branch 
 
 - **FR-001**: Repository MUST provide a single documented command that installs all declared dependencies on a fresh clone.
 - **FR-002**: Repository MUST expose named, documented commands for each quality gate: lint, type-check, build, test, and coverage measurement.
-- **FR-003**: Every quality gate MUST pass without warnings on a freshly-cloned repository on a supported runtime, with no local configuration changes.
+- **FR-003**: Every quality gate MUST pass without warnings on a freshly-cloned repository on a supported runtime, with no local configuration changes. "Without warnings" is enforced per-gate as follows; the strict bar applies to the gate tools' own warning-severity output, while pure stderr noise from sources outside the gate tools (transitive-dep deprecation notices, package-manager version banners) is tolerated:
+  - **lint**: zero warning-severity findings from the lint tool itself (per BI-0092 step 4).
+  - **type-check**: zero diagnostics at the configured strict level.
+  - **build**: zero warning-severity emit from the build tool at the configured strict level.
+  - **test**: non-zero exit on any test failure AND on any runner warning output (e.g. unhandled-promise rejection, deprecated-API notice).
+  - **coverage**: gate fails when the measured coverage drops below the declared floor (see Assumptions for the v1 floor).
+  - **install**: peer-dependency warnings fail the install gate UNLESS the originating change description documents the warning and the reason for tolerating it (per BI-0092 step 15 carve-out). Pure transitive-dep deprecation noise and package-manager version banners are tolerated.
 - **FR-004**: Repository MUST declare a minimum supported runtime version in a discoverable location.
 - **FR-005**: When invoked on a runtime version below the declared floor, the package MUST fail with an error message that explicitly names the runtime-floor requirement.
 - **FR-006**: When a quality gate fails, its failure message MUST identify the affected file or component by name so the contributor can locate the problem without parsing the full log.
-- **FR-007**: Repository MUST include every directory expected by planned subsequent feature work, each kept under version control (with a placeholder file when empty) so later specs are not blocked on "where does X live?".
-- **FR-008**: Repository MUST include a governance constitution document at a stable, discoverable path that:
-  - lists a named set of principles;
-  - states each principle as a non-negotiable rule;
-  - carries a stable version stamp that updates when rules change.
-- **FR-009**: Repository MUST include a landing page (README) that covers, at minimum: a one-line description of what the package does, the install command, a quick-start invocation of the primary entry-point, and the current limitations / unsupported scenarios.
+- **FR-007**: Repository MUST ship the following directory tree on first commit, each entry traceable to a named source (per SC-008). Empty directories carry a `.gitkeep` so they survive clone-and-clean cycles (per the **Empty placeholder directories deleted by tooling** edge case).
+
+  Empty-with-`.gitkeep` (placeholder for planned subsequent specs):
+  - `core/upfront/` — source: ADR-019 + [[Instruction Categories]].
+  - `core/on-demand/` — source: ADR-019.
+  - `families/default/` — source: ADR-019 Decision paragraph ("single default family covering all current projects; split later") + AI Instructions Distribution Channel §Source Repo Shape + §Open Questions Q6.
+  - `templates/` — source: AI Instructions Distribution Channel architecture diagram.
+  - `projects/` — source: AI Instructions Distribution Channel §Per-Project Profile.
+
+  Non-empty at scaffold (already contain content as part of v1):
+  - `src/` — source: BI-0092 step 9.
+  - `.github/workflows/` — source: BI-0092 step 8.
+  - `.specify/templates/` and `.specify/memory/` — source: BI-0092 step 10.
+
+  Explicitly excluded from version control:
+  - `.specify/working/` — gitignored per BI-0092 step 7; never committed.
+
+  Content directories live at the top level, **not** nested under `src/<pkg>/`. `src/` contains the code package only; instructional, template, family, and project-profile content lives at the top level per the architecture in AI Instructions Distribution Channel §Source Repo Shape.
+- **FR-008**: Repository MUST include a governance constitution document at the canonical path `.specify/memory/constitution.md` (the Spec Kit convention; reuses the file added in commit `653b364`). The document MUST:
+  - list a named set of principles;
+  - state each principle as a non-negotiable rule;
+  - carry a stable version stamp that updates when rules change.
+
+  The landing page (FR-009) MUST link to the constitution from a prominent location near the top of the README so a stranger can reach it without searching the directory tree (this is the operational realisation of SC-007).
+- **FR-009**: Repository MUST include a landing page (README) that covers, at minimum: a one-line description of what the package does, the install command, a quick-start invocation of the primary entry-point, the current limitations / unsupported scenarios, and a prominent governance link to `.specify/memory/constitution.md` placed near the top of the page (per FR-008).
 - **FR-010**: Repository MUST include a license file and any required third-party attributions.
-- **FR-011**: Repository MUST include a placeholder entry-point invokable after install, exposing at least a help / version-style interface, with no end-user feature behavior in v1.
+- **FR-011**: Repository MUST include a placeholder entry-point invokable after install, exposing at least a help / version-style interface, with no end-user feature behavior in v1. The entry-point is wired as a Node `bin` declared in `package.json` (per Q4). The canonical invocation from a fresh clone is `npx . --help` (no build-output path leak, no script-name memorisation, identical surface pre- and post-publish).
 - **FR-012**: Repository MUST include a change-log (or equivalent) capturing the v0.1 baseline and naming the limitations from the **Out of Scope** items the maintainer intends to advertise.
-- **FR-013**: Repository MUST include continuous-integration configuration that executes the same quality-gate sequence as the local commands and reports a clear, gate-named failure summary on any failure.
+- **FR-013**: Repository MUST include continuous-integration configuration that executes the same quality-gate sequence as the local commands and reports a clear, gate-named failure summary on any failure. The v1 CI matrix targets `ubuntu-latest` only on GitHub Actions (per Q5; matches the "single supported OS" assumption and the "cross-platform CI matrix" Out-of-Scope item).
 - **FR-014**: The local quality-gate sequence and the CI gate sequence MUST be derived from a single source of truth so they cannot drift out of agreement without an intentional edit.
 
 ### Key Entities *(include if feature involves data)*
 
 - **Quality Gate**: A named, individually-invokable verification step (lint, type-check, build, test, coverage). Each has a documented command, a pass/fail contract (non-zero exit on any failure), and a failure-message contract (name the affected file or component).
 - **Governance Constitution**: A versioned document of named, non-negotiable principles. Identified by a stable path, a version stamp, and a ratification date. Cited as the authority during reviews.
-- **Scaffold Directory Map**: The set of directories the repository ships with on first commit, each justified by a planned subsequent spec. Kept stable across clean clones via placeholder files where directories would otherwise be empty.
+- **Scaffold Directory Map**: The concrete set of directories enumerated in FR-007 that the repository ships on first commit, each traceable to a named source (ADR-019, [[Instruction Categories]], AI Instructions Distribution Channel doc, or BI-0092). Top-level placement is part of the contract — content directories are siblings of `src/`, not nested under it. Kept stable across clean clones via `.gitkeep` files where directories would otherwise be empty.
 
 ## Success Criteria *(mandatory)*
 
@@ -134,17 +169,18 @@ An automated continuous-integration run on the first push to the default branch 
 - **SC-004**: A first-time visitor can answer "what does this package do?" within 60 seconds of opening the landing page, using only the landing page text.
 - **SC-005**: 100% of the quality gates documented for local execution also execute in continuous integration on every push and pull request, with no gate present in one location and absent from the other.
 - **SC-006**: A contributor on a runtime version below the declared floor sees an error message that names the runtime requirement on the first install or run attempt — not a downstream stack trace.
-- **SC-007**: The governance constitution can be located by a new contributor within 30 seconds of opening the repository, and its current version stamp is visible without scrolling.
+- **SC-007**: The governance constitution can be located by a new contributor within 30 seconds of opening the repository — specifically, via a prominent link near the top of the README that points to `.specify/memory/constitution.md`. The constitution's current version stamp is visible without scrolling once the file is open.
 - **SC-008**: Every directory the repository ships in v1 has at least one named subsequent spec or planned use that justifies its presence; no directory exists "just in case".
 
 ## Assumptions
 
-- **Single primary runtime / language** is sufficient for v1. The choice of runtime, build tool, lint tool, type-checker, and test runner is deferred to the planning phase (`/speckit-plan`); the spec deliberately names gates abstractly (lint, type-check, build, test, coverage) so plan selection does not invalidate the spec.
-- **Single supported operating system** is sufficient for v1 (cross-platform CI matrix is explicitly out of scope per the user input). The supported OS is documented on the landing page.
-- **The placeholder entry-point** exposes only help / version-style behavior in v1; no end-user feature behavior, no question-and-answer flow, no content-rendering pipeline, and no content-bearing fixtures (per **Out of Scope**).
-- **The governance constitution** may build on the existing Spec Kit `.specify/memory/constitution.md` that is already present from the prior `[Spec Kit] Add project constitution` commit, provided it satisfies FR-008. A net-new file is acceptable if the existing one is unsuitable.
-- **Coverage gate** measures and reports coverage; the precise threshold (if any) is a planning decision. The acceptance bar at spec level is "the gate exists, runs, and reports", not a numeric percentage.
-- **The CI provider** is a single hosted CI provider on the same hosting platform as the repository; multi-provider CI is out of scope.
+- **Single primary runtime / language**: per BI-0092 the v1 commitment is **TypeScript on Node** with `eslint` for lint, `tsc` for type-check and build, and `vitest` for test and coverage. The plan (`/speckit-plan`) formalises Node minimum version, package-manager choice, exact configuration files, and exact invocation. The spec's gate names (lint, type-check, build, test, coverage) remain the canonical contract; the named tools are how that contract is honoured in v1.
+- **Single supported operating system in CI**: `ubuntu-latest` on GitHub Actions (per Q5). The package itself is Node and runs anywhere Node does; the **supported-in-CI** OS is what the v1 contract covers. The landing page documents this clearly so a Windows or macOS contributor knows their environment is not gate-verified.
+- **Line-ending discipline**: a committed `.gitattributes` enforces LF in the repository (declarative, cross-platform). This compensates for the Windows-dev / Linux-CI split surfaced by Q5 without requiring a Windows runner in the CI matrix.
+- **The placeholder entry-point** is wired as a Node `bin` declared in `package.json` and invoked `npx . --help` from a fresh clone (per Q4). It exposes only help / version-style behavior in v1 — no end-user feature behavior, no question-and-answer flow, no content-rendering pipeline, and no content-bearing fixtures (per **Out of Scope**).
+- **The governance constitution** is the existing Spec Kit `.specify/memory/constitution.md` from commit `653b364` (per Q3). It is the canonical and single source of truth — no top-level alias, no symlink, no duplicated copy. The README links to it (per FR-009) to satisfy SC-007's discoverability bar. Any future change to the constitution updates that file in place and bumps its version stamp.
+- **Coverage gate** measures **statement coverage** with `vitest` and fails when statement coverage drops below **80%** (per BI-0092 step 6). Branch / function / line thresholds, per-file granularity, and any coverage-collection configuration are planning decisions.
+- **The CI provider** is GitHub Actions (implicit in BI-0092 step 8's `.github/workflows/` and pinned by Q5); multi-provider CI is out of scope.
 - **Contributors** have Git installed, a working network connection capable of fetching declared dependencies, and a runtime at or above the declared floor.
 - **Vault-folder initialisation** (the eventual Obsidian-vault side of this package) is explicitly deferred; the v1 scaffold only prepares the agent-instruction-generation side.
 - **Code-graph integration** is deferred until codebase size justifies the maintenance cost, per **Out of Scope**.
