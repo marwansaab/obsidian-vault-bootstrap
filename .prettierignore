@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+**/.gitkeep
+
+# Spec Kit framework vendor content — authored to its own shape upstream.
+.specify/
+
+# Spec Kit IDE-integration vendor content (skill markdown files).
+.claude/
+
+# Spec source artefacts — authored to specific markdown shapes that
+# prettier reflow would distort. Do NOT format these as a side-effect of
+# format:check. (Re-evaluate per future spec if a markdown-format gate
+# is explicitly added.)
+specs/
+
+# Pre-existing root docs not re-authored by spec 001.
+CONTRIBUTING.md
+LICENSE

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.specify/working/
+
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/settings.json
