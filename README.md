@@ -58,7 +58,6 @@ with the spec that first consumes it. The full version history is in
 - No interactive Q&A flow.
 - No content-bearing fixtures (instruction-content files, template files,
   project-profile files arrive in later specs).
-- Not published to the public npm registry.
 - No Obsidian vault-folder initialisation pipeline.
 - **Single supported OS in CI: `ubuntu-latest`.** The package itself is Node
   and runs anywhere Node does; the gate-verified OS in CI is Linux only.
